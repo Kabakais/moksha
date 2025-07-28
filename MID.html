@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8" />
+  <title>MOKSHA FX Ultra</title>
+  <meta name="viewport" content="width=1024, user-scalable=no" />
+  <style>
+    @font-face {
+      font-family: 'ToastyMilk';
+      src: url('Toasty Milk.ttf') format('truetype');
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      background: #000;
+      overflow: hidden;
+      font-family: 'ToastyMilk', sans-serif;
+      user-select: none;
+    }
+
+    ::selection {
+      background: none;
+    }
+
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+    }
+
+    canvas.background-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+    .kabaka-wrapper {
+      position: relative;
+      z-index: 10;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      animation: spinFloat 12s ease-in-out infinite;
+      transform-style: preserve-3d;
+    }
+
+    .kabaka-container {
+      display: flex;
+      gap: 10px;
+      transition: transform 0.2s ease;
+    }
+
+    .letter {
+      position: relative;
+      font-size: 8vw;
+      background: linear-gradient(270deg, red, lime, blue, cyan, magenta, yellow);
+      background-size: 1600% 1600%;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation:
+        floatIn 0.8s ease forwards,
+        rgbColor 5s linear infinite,
+        glowPulse 2.5s ease-in-out infinite,
+        flicker 2s infinite,
+        pulse 3s infinite;
+      opacity: 0;
+      filter: brightness(1.4);
+      transition: transform 0.3s ease, filter 0.3s ease;
+    }
+
+    .letter:hover {
+      transform: scale(1.2);
+      filter: drop-shadow(0 0 10px white);
+    }
+
+    .crown {
+      position: absolute;
+      top: -3vw;
+      left: 50%;
+      transform: translateX(-50%) scale(0.8);
+      width: 3vw;
+      height: 3vw;
+      background: radial-gradient(circle at center, gold, orange);
+      clip-path: polygon(50% 0%, 60% 35%, 100% 35%, 70% 60%, 80% 100%, 50% 75%, 20% 100%, 30% 60%, 0 35%, 40% 35%);
+      animation: crownGlow 2s infinite ease-in-out;
+      box-shadow: 0 0 8px gold;
+      z-index: 5;
+    }
+
+    /* Animation delays per letter */
+    .letter:nth-child(1) { animation-delay: 0.2s; }
+    .letter:nth-child(2) { animation-delay: 0.4s; }
+    .letter:nth-child(3) { animation-delay: 0.6s; }
+    .letter:nth-child(4) { animation-delay: 0.8s; }
+    .letter:nth-child(5) { animation-delay: 1s; }
+    .letter:nth-child(6) { animation-delay: 1.2s; }
+
+    .reflection {
+      margin-top: 10px;
+      color: #fff3;
+      font-size: 6vw;
+      transform: scaleY(-1);
+      opacity: 0.3;
+      filter: blur(2px);
+      animation: flicker 2s infinite;
+    }
+
+    /* Animations */
+    @keyframes floatIn {
+      0% { opacity: 0; transform: translateY(-40px) scale(0.8); }
+      100% { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    @keyframes rgbColor {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    @keyframes glowPulse {
+      0%, 100% {
+        text-shadow:
+          0 0 10px #ff00cc66,
+          0 0 20px #00ffff66,
+          0 0 30px #ffff0066;
+      }
+      50% {
+        text-shadow:
+          0 0 30px #ff00cc,
+          0 0 50px #00ffff,
+          0 0 70px #ffff00;
+      }
+    }
+
+    @keyframes flicker {
+      0%, 100% { filter: drop-shadow(0 0 2px #fff); }
+      20% { filter: drop-shadow(0 0 5px #0ff); }
+      40% { filter: drop-shadow(0 0 10px #f0f); }
+      60% { filter: drop-shadow(0 0 20px #ff0); }
+      80% { filter: drop-shadow(0 0 5px #fff); }
+    }
+
+    @keyframes spinFloat {
+      0% { transform: rotate(0deg) translateY(0px); }
+      50% { transform: rotate(180deg) translateY(-10px); }
+      100% { transform: rotate(360deg) translateY(0px); }
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+
+    @keyframes crownGlow {
+      0%, 100% { box-shadow: 0 0 8px gold; }
+      50% { box-shadow: 0 0 20px orange; }
+    }
+  </style>
+</head>
+<body>
+  <canvas class="background-canvas" id="particlesCanvas"></canvas>
+
+  <div class="kabaka-wrapper" id="wrapper">
+    <div class="kabaka-container" id="container">
+      <span class="letter"><div class="crown"></div>M</span>
+      <span class="letter"><div class="crown"></div>O</span>
+      <span class="letter"><div class="crown"></div>K</span>
+      <span class="letter"><div class="crown"></div>S</span>
+      <span class="letter"><div class="crown"></div>H</span>
+      <span class="letter"><div class="crown"></div>A</span>
+    </div>
+    <div class="reflection">MOKSHA</div>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('particlesCanvas');
+    const ctx = canvas.getContext('2d');
+    let particles = [];
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    class Particle {
+      constructor() {
+        this.reset();
+      }
+      reset() {
+        this.x = Math.random() * canvas.width;
+        this.y = Math.random() * canvas.height;
+        this.radius = Math.random() * 2 + 1;
+        this.speedX = Math.random() * 0.6 - 0.3;
+        this.speedY = Math.random() * 0.6 - 0.3;
+        this.alpha = Math.random() * 0.5 + 0.3;
+        this.color = `rgba(${Math.floor(Math.random()*255)}, ${Math.floor(Math.random()*255)}, ${Math.floor(Math.random()*255)}, ${this.alpha})`;
+      }
+      update() {
+        this.x += this.speedX;
+        this.y += this.speedY;
+        if (this.x < 0 || this.x > canvas.width || this.y < 0 || this.y > canvas.height) {
+          this.reset();
+        }
+      }
+      draw() {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.fillStyle = this.color;
+        ctx.fill();
+      }
+    }
+
+    function initParticles(count) {
+      particles = [];
+      for (let i = 0; i < count; i++) {
+        particles.push(new Particle());
+      }
+    }
+
+    function animate() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      particles.forEach(p => {
+        p.update();
+        p.draw();
+      });
+      requestAnimationFrame(animate);
+    }
+
+    initParticles(150);
+    animate();
+  </script>
+</body>
+</html>
